@@ -3,6 +3,7 @@
 
 #include "stm32f407xx.h"
 #include "usart.h"
+#include "gpio.h"
 #include "crc16.h"
 
 //---- Modbus command codes ------------
@@ -31,8 +32,8 @@
 
 
 uint8_t RequestReceive(uint8_t rx_array[], uint8_t rx_array_len);
-uint8_t AnswerTransmit(uint8_t tx_array[], uint8_t tx_array_len);
 uint8_t OperationExec(uint8_t operation_code);
+uint8_t AnswerTransmit(uint8_t tx_array[], uint8_t tx_array_len);
  
 
 #endif

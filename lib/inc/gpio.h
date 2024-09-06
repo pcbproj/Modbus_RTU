@@ -25,6 +25,12 @@
 #define LED3_TOGGLE()	(LED3_PORT -> ODR ^= (1 << LED3_PIN_NUM))
 
 
+#define LED1_CHECK()	( LED1_PORT->ODR & ( 1 << LED1_PIN_NUM) )
+#define LED2_CHECK()	( LED2_PORT->ODR & ( 1 << LED2_PIN_NUM) )
+#define LED3_CHECK()	( LED3_PORT->ODR & ( 1 << LED3_PIN_NUM) )
+
+
 void GPIO_Init(void);
+
 
 #endif
