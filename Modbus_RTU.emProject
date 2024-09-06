@@ -62,6 +62,7 @@
           <file file_name="lib/inc/usart.h" />
           <file file_name="lib/inc/modbus_rtu.h" />
           <file file_name="lib/inc/crc16.h" />
+          <file file_name="lib/inc/adc.h" />
         </folder>
         <folder Name="src">
           <file file_name="lib/src/delay.c" />
@@ -71,6 +72,7 @@
           <file file_name="lib/src/usart.c" />
           <file file_name="lib/src/modbus_rtu.c" />
           <file file_name="lib/src/crc16.c" />
+          <file file_name="lib/src/adc.c" />
         </folder>
       </folder>
     </folder>

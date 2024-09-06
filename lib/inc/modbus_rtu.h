@@ -24,7 +24,15 @@
 
 //------Modbus internal addresses--------
 // LEDS, BTNS, ADC_data
+#define COILS_NUM				0x03	// LEDS
+#define DISCRETE_INPUTS_NUM		0x03	// BTNS
+#define INPUT_REGS_NUM			0x01	// ADC data
 
 
+
+uint8_t RequestReceive(uint8_t rx_array[], uint8_t rx_array_len);
+uint8_t AnswerTransmit(uint8_t tx_array[], uint8_t tx_array_len);
+uint8_t OperationExec(uint8_t operation_code);
+ 
 
 #endif
