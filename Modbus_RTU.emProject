@@ -63,6 +63,7 @@
           <file file_name="lib/inc/crc16.h" />
           <file file_name="lib/inc/adc.h" />
           <file file_name="lib/inc/rs485.h" />
+          <file file_name="lib/inc/timer.h" />
         </folder>
         <folder Name="src">
           <file file_name="lib/src/delay.c" />
@@ -73,6 +74,7 @@
           <file file_name="lib/src/crc16.c" />
           <file file_name="lib/src/adc.c" />
           <file file_name="lib/src/rs485.c" />
+          <file file_name="lib/src/timer.c" />
         </folder>
       </folder>
     </folder>
@@ -85,7 +87,16 @@
     </folder>
     <configuration
       Name="Debug"
-      c_user_include_directories="$(ProjectDir);$(ProjectDir)/lib/inc" />
+      c_user_include_directories="$(ProjectDir);$(ProjectDir)/lib/inc"
+      debug_target_connection="GDB Server"
+      gdb_server_allow_memory_access_during_execution="Yes"
+      gdb_server_autostart_server="No"
+      gdb_server_command_line=""
+      gdb_server_ignore_checksum_errors="No"
+      gdb_server_port="3333"
+      gdb_server_register_access="General and Individual"
+      gdb_server_reset_command="reset halt"
+      gdb_server_type="OpenOCD" />
   </project>
   <configuration
     Name="Debug"

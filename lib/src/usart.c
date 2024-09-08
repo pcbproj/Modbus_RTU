@@ -183,6 +183,7 @@ uint8_t usart6_receive_byte(uint8_t *rx_byte){
 	return USART_OK;
 }
 
+
 //retarget the C library printf function to the USART1 
 int __SEGGER_RTL_X_file_write(__SEGGER_RTL_FILE *__stream, const char *__s, unsigned __len) {
   
