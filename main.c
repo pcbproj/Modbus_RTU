@@ -24,7 +24,6 @@ ADC = Input Registers
 void SysTick_Handler(void){		// прервание от Systick таймера, выполняющееся с периодом 1 мкс
 
 	timer_counter();
-
 	modbus_timers();
 
 }
@@ -44,7 +43,7 @@ int main(void) {
 
 	RCC_Init();
 
-	__enable_irq();                         // global IRQ enable
+	//__enable_irq();                         // global IRQ enable
 		
 	GPIO_Init();
 
