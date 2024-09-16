@@ -24,7 +24,6 @@ ADC = Input Registers
 void SysTick_Handler(void){		// прервание от Systick таймера, выполняющееся с периодом 1 мкс
 
 	timer_counter();
-	modbus_timers();
 
 }
 
@@ -41,13 +40,20 @@ int main(void) {
 	uint8_t rs485_rx_byte;
 	uint8_t rs485_tx_array[12] = {"RS485 RX OK\n"};
 
+	uint8_t modbus_req_rx[256];
+	uint8_t modbus_rx_len;
+	uint8_t modbus_err;
+	
+	uint16_t tim2_counter  = 0;
+
 	RCC_Init();
 
-	//__enable_irq();                         // global IRQ enable
 		
 	GPIO_Init();
 
 	USART6_Init();
+
+	TIM2_Init();
 
 	SysTick_Config(SYSTICK_TIMER_CONST);		// systick period 1 us
 
@@ -55,21 +61,28 @@ int main(void) {
 	LED2_OFF();
 	LED3_OFF();
 
-	ModbusTimerStart(TIMER35_ID);		// wait 3.5 byte pause before Modbus TRU packer reception
-
 	while(1){
-			
+	
+		modbus_err = RequestReceive(modbus_req_rx, &modbus_rx_len);
+		if( modbus_err == MODBUS_OK ){	// if received request
+			// parsing request
 
-		if( !( usart6_receive_byte( &rs485_rx_byte) ) ){	// if received byte
+			// execute command
+
+			// send answer to master
+			
+			
 			LED2_ON();
-			Delay_ms(LED_BLINK_300ms);
+			
+			//usart6_send(rs485_tx_array, sizeof(rs485_tx_array));	// send this byte back
+			Delay_ms(50);
 			
 			LED2_OFF();
 
-			usart6_send(rs485_tx_array, sizeof(rs485_tx_array));	// send this byte back
-
-
 		}
+	
+	Delay_ms(100);
+	LED1_TOGGLE();
 
 	}	// while(1)
 }	// main()

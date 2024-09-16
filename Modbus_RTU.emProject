@@ -62,7 +62,6 @@
           <file file_name="lib/inc/modbus_rtu.h" />
           <file file_name="lib/inc/crc16.h" />
           <file file_name="lib/inc/adc.h" />
-          <file file_name="lib/inc/rs485.h" />
           <file file_name="lib/inc/timer.h" />
         </folder>
         <folder Name="src">
@@ -73,7 +72,6 @@
           <file file_name="lib/src/modbus_rtu.c" />
           <file file_name="lib/src/crc16.c" />
           <file file_name="lib/src/adc.c" />
-          <file file_name="lib/src/rs485.c" />
           <file file_name="lib/src/timer.c" />
         </folder>
       </folder>

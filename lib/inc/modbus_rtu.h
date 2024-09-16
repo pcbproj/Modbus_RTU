@@ -12,13 +12,14 @@
 
 #define USART_BAUD_USED		115200
 #define USART_BIT_TIME_US	1000000 / USART_BAUD_USED
-#define USART_BYTE_TIME_US	USART_BIT_TIME_US * 8
+#define USART_BYTE_TIME_US	USART_BIT_TIME_US * 12	// BYTE send in 12 bits maximum
 
 #define DELAY_1_5_BYTE_US	( USART_BYTE_TIME_US * 1.5 + 1 )
+#define DELAY_2_5_BYTE_US	( USART_BYTE_TIME_US * 2.5 + 1 )
 #define DELAY_3_5_BYTE_US	( USART_BYTE_TIME_US * 3.5 + 1 )
 
-#define TIMER15_ID				15
-#define TIMER35_ID				35
+#define TIMER15_CYCLES				15
+#define TIMER35_CYCLES				35
 
 
 //---- Modbus command codes ------------
@@ -63,22 +64,15 @@
 Функция реализации таймеров для определения временных задержек протокола Modbus RTU
 вызывается только в прерывании Systick timer с частотой 1 МГц
 *******/
-void modbus_timers(void);
+//void modbus_timers(void);
 
 /******
-Функция запуска программного таймера timer15 или timer35.
-если timer_ID = 15, запускается timer15
-	выставляется Enable15 = 1;
-	сбрасывается счетчик timer15 = 0;
-если timer_ID = 35, запускается timer35
-	выставляется Enable35 = 1;
-	сбрасывается счетчик timer35 = 0;
-
+Функция запуска таймера Modbus.
 *******/
-void ModbusTimerStart(uint8_t timer_ID);
+void ModbusTimerStart(uint16_t timer_cycles);
 
 
-void ModbusTimerStopClear(uint8_t timer_ID);
+void ModbusTimerStopClear(void);
 
 
 
