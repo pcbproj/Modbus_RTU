@@ -81,7 +81,7 @@ uint8_t RequestReceive(uint8_t rx_array[], uint8_t *rx_array_len){
 	
 	
 	
-	// waiting of first Request byte
+	// waiting for first byte
 	rx_byte_num = 0;
 	rx_err = ModbusReceiveFirstByte(MODBUS_USART, &rx_byte); // started timer (1.5 + 1) byte
 	rx_array[rx_byte_num] = rx_byte;
