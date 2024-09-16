@@ -18,8 +18,8 @@
 #define DELAY_2_5_BYTE_US	( USART_BYTE_TIME_US * 2.5 + 1 )
 #define DELAY_3_5_BYTE_US	( USART_BYTE_TIME_US * 3.5 + 1 )
 
-#define TIMER15_CYCLES				15
-#define TIMER35_CYCLES				35
+//#define TIMER15_CYCLES				15
+//#define TIMER35_CYCLES				35
 
 
 //---- Modbus command codes ------------
@@ -29,23 +29,29 @@
 #define WRITE_SINGLE_COIL		0x05	
 #define WRITE_MULTI_COILS		0x0F
 
+#define COILS_NUMBER			3		// Leds
+#define DISCRETE_INS_NUMBER		3		// Buttons
+#define IN_REGISTERS_NUMBER		1		// ADC value
+
+
+
 #define ANSWER_ADD				0x80	// add for answer command code
 
 
 //-------- Modbus Error codes ----------
 #define MODBUS_OK				0x00
 #define ERROR_OP_CODE			0x01
-#define ERROR_ADDR				0x02
+#define ERROR_DATA_ADDR			0x02
 #define ERROR_DATA_VAL			0x03
 #define ERROR_EXECUTION			0x04	
 #define ERROR_05				0x05	// reserved
 #define ERROR_06				0x06	// reserved
 
 
-#define ERROR_CRC				0x0F
-#define ERROR_PACK_LEN			0x1F
-#define MODBUS_RX_DONE			0x2F
-
+#define ERROR_CRC				0x0F	// ошибка по CRC16 
+#define ERROR_PACK_LEN			0x1F	// неверная длина пакета
+#define MODBUS_RX_DONE			0x2F	// прием пакета завершен
+#define ERROR_DEV_ADDR			0x3F	// неверный адрес устройства в пакете
 
 //------- Modbus device address----------
 #define DEVICE_ADDR				0xAD
@@ -111,13 +117,39 @@ uint8_t RequestReceive(uint8_t rx_array[], uint8_t *rx_array_len);
 функция формирует массив для ответного пакета - tx_answer[] и длина его - answer_len . 
 CRC16 также вычисляется для выходного пакета.
 ******/
-uint8_t OperationExec(uint8_t rx_request[],		// received request array
+uint8_t RequestParsingOperationExec(uint8_t rx_request[],		// received request array
 						uint8_t *request_len,		// request array length in bytes
 						uint8_t tx_answer[],		// tx_answer array
 						uint8_t *answer_len			// answer array length in bytes
 						);
 
 
+/*******
+ф-ия возвращает код ошибки если полученный код операции не поддерживается
+или возвращает MODBUS_OK если полученный код операции поддерживается 
+в выходной параметр op_code_out сохраняется значение кода операции
+*******/
+uint8_t GetOperationCode(uint8_t rx_request[],s uint8_t *op_code_out);
+			
+
+/*******
+Ф-ия проверяет правильность поля DATA и выполняет команду по запросу.
+	op_code			- код операции в принятом запросе
+	rx_request[]	- массив запроса
+	req_len,		- длина массива запроса
+	tx_answer[]		- выходной массив ответа. CRC16 посчитано и добавлено в конец массива 
+					(младший байт CRC идет первый, потом - старший)
+	*answer_len		- длина выходного массива ответа
+
+
+*******/
+uint8_t ExecOperation(uint8_t op_code, 
+						uint8_t rx_request[], 
+						uint8_t req_len, 
+						uint8_t tx_answer[], 
+						uint8_t *answer_len);
+						
+									
 
 /********
 Ф-ия отправки ответного сообщения. 
