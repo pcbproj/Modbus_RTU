@@ -346,9 +346,35 @@ uint8_t Exec_WRITE_MULTI_COILS(uint8_t rx_request[],
 	
 	uint16_t start_addr_in = ( rx_request[2] << 8 ) +  rx_request[3];
 	uint16_t quantity_rx = ( rx_request[4] << 8 ) +  rx_request[5];
+	
 	uint8_t bytes_num = rx_request[6];
+	uint8_t CoilsPortValue = ( ( ( rx_request[7] << 8 ) + rx_request[8] ) & 0x0007) ^ 0x0007; // (XOR ^) inversion couse LEDs turned by zero.
+
+	uint16_t turn_on_coils_num = 0;
 
 
+	LED1_PORT->ODR = ( CoilsPortValue << LED1_PIN_NUM );
+	
+	// calculate turn on coils number
+	for(uint8_t j = 0; j < 2 * quantity_rx; j++){
+		uint8_t data_byte = rx_request[7+j];
+		
+		for(uint8_t i = 0; i < 8; i++){
+			if (data_byte & 0x01) turn_on_coils_num++;
+			data_byte = data_byte >> 1;
+		}
+	}
+	
+	answer_tx[0] = DEVICE_ADDR;
+	answer_tx[1] = WRITE_MULTI_COILS;
+	answer_tx[2] = ( start_addr_in >> 8 );
+	answer_tx[3] = ( start_addr_in & 0x00FF );
+	answer_tx[4] = ( turn_on_coils_num >> 8 );
+	answer_tx[5] = ( turn_on_coils_num & 0x00FF );
+	
+	*answer_len = 6;
+
+	return MODBUS_OK;
 }
 
 
@@ -407,7 +433,7 @@ uint8_t ExecOperation(uint8_t op_code,
 // вычисление CRC16 для ответного пакета
 // формирование ответного пакета
 uint8_t RequestParsingOperationExec(uint8_t rx_request[], 
-						uint8_t *request_len,
+						uint8_t request_len,
 						uint8_t tx_answer[], 
 						uint8_t *answer_len )
 						{
@@ -419,15 +445,17 @@ uint8_t RequestParsingOperationExec(uint8_t rx_request[],
 	uint16_t start_addr_rx;
 	uint16_t quantity_rx;
 	uint8_t bytes_number_rx;
+	uint8_t tx_answer_tmp[256];
+	uint8_t answer_len_tmp;
 
 
 	// if Device Address match
 	if(rx_request[0] == DEVICE_ADDR){
 		
 		// TODO: check this formula!!
-		crc_rx = (rx_request[((*request_len) - 1)] << 8) + (rx_request[((*request_len) - 2)] & 0x00FF);
+		crc_rx = (rx_request[((request_len) - 1)] << 8) + (rx_request[((request_len) - 2)] & 0x00FF);
 		// CRC16 compare
-		crc = CRC16_Calc(rx_request, ((*request_len) - 2));
+		crc = CRC16_Calc(rx_request, ((request_len) - 2));
 		
 		if(crc == crc_rx) {		// Get OperationCode value
 			err = GetOperationCode(rx_request, &op_code_rx);
@@ -448,7 +476,7 @@ uint8_t RequestParsingOperationExec(uint8_t rx_request[],
 			return ERROR_DATA_VAL;
 
 		if(err == MODBUS_OK){	// operation execution
-			//err = OperationExec();
+			err = ExecOperation(op_code_rx, rx_request, request_len, tx_answer_tmp, &answer_len_tmp);
 		}
 		else 
 			return ERROR_EXECUTION;

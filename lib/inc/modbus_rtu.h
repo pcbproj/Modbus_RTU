@@ -119,7 +119,7 @@ uint8_t RequestReceive(uint8_t rx_array[], uint8_t *rx_array_len);
 CRC16 также вычисляется для выходного пакета.
 ******/
 uint8_t RequestParsingOperationExec(uint8_t rx_request[],		// received request array
-						uint8_t *request_len,		// request array length in bytes
+						uint8_t request_len,		// request array length in bytes
 						uint8_t tx_answer[],		// tx_answer array
 						uint8_t *answer_len			// answer array length in bytes
 						);
