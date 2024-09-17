@@ -29,17 +29,11 @@
 #define WRITE_SINGLE_COIL		0x05	
 #define WRITE_MULTI_COILS		0x0F
 
-#define COILS_NUMBER			3		// Leds
-#define DISCRETE_INS_NUMBER		3		// Buttons
-#define IN_REGISTERS_NUMBER		1		// ADC value
-
-
 
 #define ANSWER_ADD				0x80	// add for answer command code
 
 
-//-------- Modbus Error codes ----------
-#define MODBUS_OK				0x00
+//-------- Modbus ERROR codes ----------
 #define ERROR_OP_CODE			0x01
 #define ERROR_DATA_ADDR			0x02
 #define ERROR_DATA_VAL			0x03
@@ -47,7 +41,8 @@
 #define ERROR_05				0x05	// reserved
 #define ERROR_06				0x06	// reserved
 
-
+//-------- Internal ERROR Codes --------------
+#define MODBUS_OK				0x00
 #define ERROR_CRC				0x0F	// ошибка по CRC16 
 #define ERROR_PACK_LEN			0x1F	// неверная длина пакета
 #define MODBUS_RX_DONE			0x2F	// прием пакета завершен
@@ -58,12 +53,12 @@
 
 //------Modbus internal addresses--------
 // LEDS, BTNS, ADC_data
-#define COILS_NUM				0x03	// LEDS
-#define DISCRETE_INPUTS_NUM		0x03	// BTNS
-#define INPUT_REGS_NUM			0x01	// ADC data
+#define COILS_NUM				3	// LEDS
+#define DISCRETE_INPUTS_NUM		3	// BTNS
+#define INPUT_REGS_NUM			1	// ADC data
 
-#define TIMER_DONE				0x01
-#define TIMER_WORKS				0x00
+//#define TIMER_DONE				0x01
+//#define TIMER_WORKS				0x00
 
 
 /*******
@@ -124,13 +119,30 @@ uint8_t RequestParsingOperationExec(uint8_t rx_request[],		// received request a
 						);
 
 
+
+
+
 /*******
 ф-ия возвращает код ошибки если полученный код операции не поддерживается
 или возвращает MODBUS_OK если полученный код операции поддерживается 
 в выходной параметр op_code_out сохраняется значение кода операции
 *******/
-uint8_t GetOperationCode(uint8_t rx_request[],s uint8_t *op_code_out);
-			
+uint8_t GetOperationCode(uint8_t rx_request[], uint8_t *op_code_out);
+	
+	
+	
+
+
+/********
+Ф-ия возвращает код ошибки, если адрес данных больше чем адресуемых объектов в устройстве
+или возвращает MODBUS_OK, если адресация данных верная.
+*******/
+uint8_t CheckDataAddress(uint8_t op_code, uint8_t rx_request[]);		
+
+
+
+
+
 
 /*******
 Ф-ия проверяет правильность поля DATA и выполняет команду по запросу.

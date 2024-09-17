@@ -41,11 +41,14 @@ void ModbusTimerStopClear(void){
 	TIM2_StopClear();
 }
 
-
+// TODO: переписать функцию.
+// чтобы пауза в 3,5 байта выдерживалась и только после этого проверялся приемник USART
+// а если во время паузы 3,5 байта приходит байт на USART, то перезапускать таймер 3,5 байта
+// лучше начинать прием пакета по прерыванию от USART, чтобы не звисать в ожидании начала пакета.
 uint8_t ModbusReceiveFirstByte(uint8_t usart_number, uint8_t *rx_byte){
 	ModbusTimerStart(DELAY_3_5_BYTE_US);
 	
-	// TODO: переписать while(!TIM2_Check()){
+	// TODO??? переписать while(!TIM2_Check()){
 	// пока не TIM2_CHECK() и если приходит байт, то таймер должен перезапускаться, 
 	// чтобы пауза была не менее 3,5 байта длительностью.
 	while(!TIM2_Check()){
@@ -121,13 +124,55 @@ uint8_t GetOperationCode(uint8_t rx_request[], uint8_t *op_code_out){
 
 		*op_code_out = op_code_rx;
 		return MODBUS_OK;
-
 	} 
-
 	else return ERROR_OP_CODE;
-
 }
 
+
+
+
+uint8_t CheckDataAddress(uint8_t op_code_in, uint8_t rx_request[]){
+	uint16_t start_addr_rx = (rx_request[2] << 8) + rx_request[3];
+	
+	switch(op_code_in){
+	case(READ_COILS):
+		if((start_addr_rx >= 0) && (start_addr_rx < COILS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_ADDR;
+		break;
+
+	case(READ_DISCRETE_INPUTS):
+		if((start_addr_rx >= 0) && (start_addr_rx < DISCRETE_INPUTS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_ADDR;
+		break;
+
+	case(READ_INPUT_REGISTERS):
+		if((start_addr_rx >= 0) && (start_addr_rx < INPUT_REGS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_ADDR;
+		break;
+
+	case(WRITE_SINGLE_COIL):
+		if((start_addr_rx >= 0) && (start_addr_rx < COILS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_ADDR;
+		break;
+
+	case(WRITE_MULTI_COILS):
+		if((start_addr_rx >= 0) && (start_addr_rx < COILS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_ADDR;
+		break;
+
+	}
+
+}
 
 
 uint8_t ExecOperation(uint8_t op_code, 
@@ -140,51 +185,43 @@ uint8_t ExecOperation(uint8_t op_code,
 	uint16_t quantity_rx;
 	uint8_t bytes_number_rx;
 
-	// switch(OperationCode) для обраотки полей DATA
-					// Адрес данных верный?
-					// Значение данных верное? В адекватном диапазоне?
-					// Выполнение требуемой операции
-					// формирование ответного пакета
-					// вычисление CRC16 для ответного пакета
-					// добавление CRC16 в ответный пакет (младший байт идет первым)
+	// switch(OperationCode) для обработки полей DATA
+		
 			
-			// для каждого case написать свою функцию обработки пакета и выполнения операции?			
-			switch(op_code){
-			case(READ_COILS):
-				start_addr_rx = (rx_request[2] << 8) + rx_request[3];
-				if((start_addr_rx >= 0) && (start_addr_rx < COILS_NUMBER)){
-					
-				}
-				return ERROR_DATA_ADDR;
-				break;
+	// для каждого case написать свою функцию выполнения операции		
+	switch(op_code){
+	case(READ_COILS):
+		
+		return ERROR_EXECUTION;
+		break;
 
-			case(READ_COILS):
+	case(READ_DISCRETE_INPUTS):
+		
+		return ERROR_EXECUTION;
+		break;
 
-				break;
+	case(READ_INPUT_REGISTERS):
+		
+		return ERROR_EXECUTION;
+		break;
 
-			case(READ_DISCRETE_INPUTS):
+	case(WRITE_SINGLE_COIL):
 
-				break;
+		break;
 
-			case(READ_INPUT_REGISTERS):
+	case(WRITE_MULTI_COILS):
 
-				break;
+		break;
 
-			case(WRITE_SINGLE_COIL):
-
-				break;
-
-			case(WRITE_MULTI_COILS):
-
-				break;
-
-			case default:
-				break;
-			}
+	}
 }
 
 
-
+// Адрес данных верный?
+// Значение данных верное? В адекватном диапазоне?
+// Выполнение требуемой операции
+// вычисление CRC16 для ответного пакета
+// формирование ответного пакета
 uint8_t RequestParsingOperationExec(uint8_t rx_request[], 
 						uint8_t *request_len,
 						uint8_t tx_answer[], 
@@ -200,33 +237,43 @@ uint8_t RequestParsingOperationExec(uint8_t rx_request[],
 	uint8_t bytes_number_rx;
 
 
-	// Device Address compare
+	// if Device Address match
 	if(rx_request[0] == DEVICE_ADDR){
-
-		// CRC16 compare
 		
 		// TODO: check this formula!!
 		crc_rx = (rx_request[((*request_len) - 1)] << 8) + (rx_request[((*request_len) - 2)] & 0x00FF);
-
+		// CRC16 compare
 		crc = CRC16_Calc(rx_request, ((*request_len) - 2));
-		if(crc == crc_rx) {
 		
-		// Get OperationCode value
+		if(crc == crc_rx) {		// Get OperationCode value
 			err = GetOperationCode(rx_request, &op_code_rx);
-
-				
-
 		}
-		else{ // TODO: answer error array assebmly
+		else 
 			return ERROR_CRC;
+
+		if(err == MODBUS_OK){	// check data address 
+			err = CheckDataAddress(op_code_rx, rx_request);
 		}
+		else 
+			return ERROR_DATA_ADDR;
+		
+		if(err == MODBUS_OK){	// check data value
+			//err = CheckDataValue(); 
+		}
+		else 
+			return ERROR_DATA_VAL;
+
+		if(err == MODBUS_OK){	// operation execution
+			//err = OperationExec();
+		}
+		else 
+			return ERROR_EXECUTION;
+
 	}
 	else{ // TODO: answer error array assebmly
-		return ERROR_DEV_ADDR;
-
+		err = ERROR_DEV_ADDR;
 	}
-	
-	
+	return err;
 }
 
 
