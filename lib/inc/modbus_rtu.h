@@ -3,6 +3,7 @@
 
 #include "stm32f407xx.h"
 #include "usart.h"
+#include "adc.h"
 #include "gpio.h"
 #include "crc16.h"
 #include "delay.h"
@@ -56,6 +57,11 @@
 #define COILS_NUM				3	// LEDS
 #define DISCRETE_INPUTS_NUM		3	// BTNS
 #define INPUT_REGS_NUM			1	// ADC data
+
+
+#define COIL_ON_CODE			0xFF00
+#define COIL_OFF_CODE			0x0000
+
 
 //#define TIMER_DONE				0x01
 //#define TIMER_WORKS				0x00
@@ -142,6 +148,11 @@ uint8_t CheckDataAddress(uint8_t op_code, uint8_t rx_request[]);
 
 
 
+/********
+Ф-ия возвращает код ошибки, если значение данных больше чем допустимый диапазон в устройстве
+или возвращает MODBUS_OK, если значения данных верные.
+*******/
+uint8_t CheckDataValue(uint8_t op_code_in, uint8_t rx_request[]);
 
 
 /*******
@@ -162,6 +173,65 @@ uint8_t ExecOperation(uint8_t op_code,
 						uint8_t *answer_len);
 						
 									
+
+/********
+Ф-ия выполняет операцию READ_COILS и возвращает код ошибки выполнения, либо MODBUS_OK, если все хорошо.
+ответный пакет формируется в выходной параметр массив answer_tx[], НО БЕЗ CRC16! 
+********/
+uint8_t Exec_READ_COILS( uint16_t start_addr_in, 
+							uint16_t quantity_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len);
+
+
+/********
+Ф-ия выполняет операцию READ_DISCRETE_INPUTS и возвращает код ошибки выполнения, 
+либо возвращает MODBUS_OK, если все хорошо.
+ответный пакет формируется в выходной параметр массив answer_tx[], БЕЗ CRC16! 
+********/
+uint8_t Exec_READ_DISCRETE_INPUTS( uint16_t start_addr_in, 
+							uint16_t quantity_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len);
+
+
+
+/********
+Ф-ия выполняет операцию READ_INPUT_REGISTERS и возвращает код ошибки выполнения, 
+либо возвращает MODBUS_OK, если все хорошо.
+ответный пакет формируется в выходной параметр массив answer_tx[], БЕЗ CRC16! 
+********/
+uint8_t Exec_READ_INPUT_REGISTERS( uint16_t start_addr_in, 
+							uint16_t quantity_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len);
+
+
+
+
+/********
+Ф-ия выполняет операцию WRITE_SINGLE_COIL и возвращает код ошибки выполнения, 
+либо возвращает MODBUS_OK, если все хорошо.
+ответный пакет формируется в выходной параметр массив answer_tx[], БЕЗ CRC16! 
+********/
+uint8_t Exec_WRITE_SINGLE_COIL( uint16_t start_addr_in, 
+							uint16_t value_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len);
+
+
+
+
+/********
+Ф-ия выполняет операцию WRITE_MULTI_COILS и возвращает код ошибки выполнения, 
+либо возвращает MODBUS_OK, если все хорошо.
+ответный пакет формируется в выходной параметр массив answer_tx[], БЕЗ CRC16! 
+********/
+uint8_t Exec_WRITE_MULTI_COILS(uint8_t rx_request[],
+							uint8_t req_len, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len);
+										
 
 /********
 Ф-ия отправки ответного сообщения. 

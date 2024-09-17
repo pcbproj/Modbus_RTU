@@ -175,45 +175,229 @@ uint8_t CheckDataAddress(uint8_t op_code_in, uint8_t rx_request[]){
 }
 
 
+/*
+	выход с номером 1 адресуется как 0.
+*/
+uint8_t CheckDataValue(uint8_t op_code_in, uint8_t rx_request[]){
+	uint16_t start_addr_rx = (rx_request[2] << 8) + rx_request[3];
+	uint16_t quantity_rx = (rx_request[4] << 8) + rx_request[5];
+	uint16_t rx_data_range = start_addr_rx + quantity_rx;
+
+
+	switch(op_code_in){
+	case(READ_COILS):
+		if((rx_data_range >= 0) && (rx_data_range <= COILS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_VAL;
+		break;
+
+	case(READ_DISCRETE_INPUTS):
+		if((rx_data_range > 0) && (rx_data_range <= DISCRETE_INPUTS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_VAL;
+		break;
+
+	case(READ_INPUT_REGISTERS):
+		if((rx_data_range > 0) && (rx_data_range <= INPUT_REGS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_VAL;
+		break;
+
+	case(WRITE_SINGLE_COIL):
+		if((rx_data_range > 0) && (rx_data_range <= COILS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_VAL;
+		break;
+
+	case(WRITE_MULTI_COILS):
+		if((rx_data_range > 0) && (rx_data_range <= COILS_NUM)){
+			return MODBUS_OK;
+		}
+		else return ERROR_DATA_VAL;
+		break;
+
+	}
+
+
+}
+
+
+
+uint8_t Exec_READ_COILS( uint16_t start_addr_in, 
+							uint16_t quantity_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len){
+	uint8_t bytes_num = 1;
+	uint8_t Value_D0 = (((LED1_PORT -> ODR) & 0xE0) >> (LED1_PIN_NUM + start_addr_in));	// 0xE0 = pins 13 - 15 masked
+	answer_tx[0] = DEVICE_ADDR;
+	answer_tx[1] = READ_COILS;
+	answer_tx[2] = bytes_num;
+	answer_tx[3] = Value_D0;
+	*answer_len = bytes_num + 3; // answer_len = all listed bytes, without CRC16 bytes
+
+	return MODBUS_OK;
+
+}
+
+
+uint8_t Exec_READ_DISCRETE_INPUTS( uint16_t start_addr_in, 
+							uint16_t quantity_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len){
+
+	uint8_t bytes_num = 1;
+	
+	uint8_t Value_D0 = (((BTN_PORT -> IDR) & 0x1C) >> (BTN1_PIN_NUM + start_addr_in));	// 0x1C = pins 10 - 12 masked
+
+	answer_tx[0] = DEVICE_ADDR;
+	answer_tx[1] = READ_DISCRETE_INPUTS;
+	answer_tx[2] = bytes_num;
+	answer_tx[3] = Value_D0;
+	*answer_len = bytes_num + 3; // answer_len = all listed bytes, without CRC16 bytes
+
+	return MODBUS_OK;
+
+}
+
+
+
+
+
+uint8_t Exec_READ_INPUT_REGISTERS( uint16_t start_addr_in, 
+							uint16_t quantity_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len){
+	uint8_t bytes_num = 2;
+	uint16_t input_reg = ADC1_Read();
+	
+	answer_tx[0] = DEVICE_ADDR;
+	answer_tx[1] = READ_INPUT_REGISTERS;
+	answer_tx[2] = bytes_num;
+	answer_tx[3] = (input_reg >> 8);		// MSB of input_reg
+	answer_tx[4] = (input_reg & 0x00FF);	// LSB of input_reg
+
+	*answer_len = bytes_num + 3; // answer_len = all listed bytes, without CRC16 bytes
+	
+	return MODBUS_OK;
+}
+
+
+
+
+
+
+
+/*
+	выход с номером 1 адресуется как 0.
+*/
+uint8_t Exec_WRITE_SINGLE_COIL( uint16_t start_addr_in, 
+							uint16_t value_in, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len){
+	uint8_t bytes_num = 1;
+	if(value_in = COIL_ON_CODE){
+		LED1_PORT -> ODR &= ~( 1 << ( LED1_PIN_NUM + start_addr_in ) );	// LED ON
+		
+		answer_tx[0] = DEVICE_ADDR;
+		answer_tx[1] = WRITE_SINGLE_COIL;
+		answer_tx[2] = ( start_addr_in >> 8 );
+		answer_tx[3] = ( start_addr_in & 0x00FF );
+		answer_tx[4] = ( value_in >> 8 );
+		answer_tx[5] = ( value_in & 0x00FF );
+	
+		*answer_len = 6;
+
+		return MODBUS_OK;
+
+	}
+	else{
+		if(value_in == COIL_OFF_CODE){
+			LED1_PORT -> ODR |= ( 1 << ( LED1_PIN_NUM + start_addr_in ) );	// LED OFF
+
+			answer_tx[0] = DEVICE_ADDR;
+			answer_tx[1] = WRITE_SINGLE_COIL;
+			answer_tx[2] = ( start_addr_in >> 8 );
+			answer_tx[3] = ( start_addr_in & 0x00FF );
+			answer_tx[4] = ( value_in >> 8 );
+			answer_tx[5] = ( value_in & 0x00FF );
+			
+			*answer_len = 6;
+
+			return MODBUS_OK;
+
+		}
+		else return ERROR_EXECUTION;
+	}
+}
+
+
+
+
+
+
+uint8_t Exec_WRITE_MULTI_COILS(uint8_t rx_request[],
+							uint8_t req_len, 
+							uint8_t answer_tx[],
+							uint8_t *answer_len){
+	
+	uint16_t start_addr_in = ( rx_request[2] << 8 ) +  rx_request[3];
+	uint16_t quantity_rx = ( rx_request[4] << 8 ) +  rx_request[5];
+	uint8_t bytes_num = rx_request[6];
+
+
+}
+
+
+
+
+
+
 uint8_t ExecOperation(uint8_t op_code, 
 						uint8_t rx_request[], 
 						uint8_t req_len, 
 						uint8_t tx_answer[], 
 						uint8_t *answer_len){
 	
-	uint16_t start_addr_rx;
-	uint16_t quantity_rx;
+	uint16_t start_addr_rx = (rx_request[2] << 8) + rx_request[3];
+	uint16_t quantity_rx = (rx_request[4] << 8) + rx_request[5];
 	uint8_t bytes_number_rx;
+	uint8_t err;
+	uint8_t answer_array[256];
+	uint8_t array_answer_len = 0;
 
-	// switch(OperationCode) для обработки полей DATA
-		
 			
 	// для каждого case написать свою функцию выполнения операции		
 	switch(op_code){
 	case(READ_COILS):
-		
-		return ERROR_EXECUTION;
+		err = Exec_READ_COILS(start_addr_rx, quantity_rx, answer_array, &array_answer_len);
 		break;
 
 	case(READ_DISCRETE_INPUTS):
-		
-		return ERROR_EXECUTION;
+		err = Exec_READ_DISCRETE_INPUTS(start_addr_rx, quantity_rx, answer_array, &array_answer_len);
 		break;
 
 	case(READ_INPUT_REGISTERS):
-		
-		return ERROR_EXECUTION;
+		err = Exec_READ_INPUT_REGISTERS(start_addr_rx, quantity_rx, answer_array, &array_answer_len);
 		break;
 
 	case(WRITE_SINGLE_COIL):
-
+		err = Exec_WRITE_SINGLE_COIL(start_addr_rx, quantity_rx, answer_array, &array_answer_len);
 		break;
 
 	case(WRITE_MULTI_COILS):
-
+		err = Exec_WRITE_MULTI_COILS(rx_request, req_len, answer_array, &array_answer_len);
 		break;
 
 	}
+	
+	*answer_len = array_answer_len;
+	for(uint8_t i=0; i < array_answer_len; i++) tx_answer[i] = answer_array[i];
+	
+	return err;
 }
 
 
@@ -258,7 +442,7 @@ uint8_t RequestParsingOperationExec(uint8_t rx_request[],
 			return ERROR_DATA_ADDR;
 		
 		if(err == MODBUS_OK){	// check data value
-			//err = CheckDataValue(); 
+			err = CheckDataValue(op_code_rx, rx_request); 
 		}
 		else 
 			return ERROR_DATA_VAL;

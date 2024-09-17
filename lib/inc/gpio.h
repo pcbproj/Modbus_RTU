@@ -29,6 +29,15 @@
 #define LED2_CHECK()	( LED2_PORT->ODR & ( 1 << LED2_PIN_NUM) )
 #define LED3_CHECK()	( LED3_PORT->ODR & ( 1 << LED3_PIN_NUM) )
 
+//------------ buttons add----------------
+
+#define BTN_PORT		GPIOE
+#define BTN1_PIN_NUM	10
+#define BTN2_PIN_NUM	11
+#define BTN3_PIN_NUM	12
+
+
+
 
 void GPIO_Init(void);
 
